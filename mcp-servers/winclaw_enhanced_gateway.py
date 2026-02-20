@@ -1,5 +1,5 @@
 """
-OpenClaw Enhanced Gateway - With MCP Tools, Log Bridge & Local LLM
+WinClaw Enhanced Gateway - With MCP Tools, Log Bridge & Local LLM
 Integrates WhatsApp → 21 Tools → Log Bridge → LiteLLM → Ollama
 """
 
