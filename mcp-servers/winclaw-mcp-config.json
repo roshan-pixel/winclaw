@@ -1,6 +1,6 @@
 {
-  "$schema": "https://docs.openclaw.ai/config-schema.json",
-  "$comment": "Add these settings to your openclaw.json to enable the 22 MCP tools",
+  "$schema": "https://docs.winclaw.ai/config-schema.json",
+  "$comment": "Add these settings to your winclaw.json to enable the 22 MCP tools",
   
   "agents": {
     "defaults": {
@@ -8,11 +8,11 @@
         "mcp": {
           "$comment": "Wrapper for 22 MCP tools (Windows MCP + WhatsApp Bridge)",
           "command": "python",
-          "args": ["C:/Users/sgarm/openclaw-repos/openclaw/mcp-servers/mcp-cli-tool.py"],
+          "args": ["C:/Users/sgarm/winclaw-repos/winclaw/mcp-servers/mcp-cli-tool.py"],
           "output": "json",
           "input": "stdin",
           "env": {
-            "PYTHONPATH": "C:/Users/sgarm/openclaw-repos/openclaw/mcp-servers"
+            "PYTHONPATH": "C:/Users/sgarm/winclaw-repos/winclaw/mcp-servers"
           },
           "serialize": false
         }
@@ -72,9 +72,9 @@
   },
 
   "$integration_instructions": {
-    "step_1_merge_config": "Copy the 'agents.defaults.cliBackends.mcp' section to your openclaw.json",
+    "step_1_merge_config": "Copy the 'agents.defaults.cliBackends.mcp' section to your winclaw.json",
     "step_2_update_paths": "Update the Python path to match your installation",
-    "step_3_restart_gateway": "Run: openclaw gateway restart",
+    "step_3_restart_gateway": "Run: winclaw gateway restart",
     "step_4_verify": "Test with: python mcp-cli-tool.py status",
     "step_5_use_tools": "Your agent can now call any MCP tool directly"
   }
