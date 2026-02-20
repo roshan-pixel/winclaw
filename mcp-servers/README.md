@@ -3,7 +3,7 @@ Connect AI models (Claude, Ollama/DeepSeek) to 22 Windows automation tools to co
 
 ---
 
-# OpenClaw MCP Servers
+# WinClaw MCP Servers
 
 - [What is This?](#what-is-this)
 - [Architecture Overview](#architecture-overview)
@@ -21,7 +21,7 @@ Connect AI models (Claude, Ollama/DeepSeek) to 22 Windows automation tools to co
 
 ## What is This?
 
-OpenClaw is an AI agent framework that gives Claude (or any LLM) the ability to control your Windows PC in real time.
+WinClaw is an AI agent framework that gives Claude (or any LLM) the ability to control your Windows PC in real time.
 
 It uses the Model Context Protocol (MCP) — an open standard that lets AI models call 'tools' (like taking a screenshot, clicking a button, or running a shell command) during a conversation.
 
@@ -38,22 +38,22 @@ Claude replies with the result + screenshot
 
 ```text
 YOU (User)
-  Chat via API / OpenClaw Client
-             |
-             v
-    OpenClaw Gateway (openclaw_gateway.py)
-      - Receives your message
-      - Sends to Claude / LiteLLM / Ollama
-      - Manages agent loop (think -> act -> observe)
-             |
-      +------+------+
-      |      |      |
-      v      v      v
-  MCP Server  LiteLLM Proxy  WhatsApp Bridge
-  (port 4000) (optional)    (port 5001)
-      |      v
-  21 Windows Tools  Ollama
-  (stdio)
+Chat via API / WinClaw Client
+     |
+     v
+WinClaw Gateway (winclaw_gateway.py)
+  - Receives your message
+  - Sends to Claude / LiteLLM / Ollama
+  - Manages agent loop (think -> act -> observe)
+     |
+ +------+------+
+ |      |      |
+ v      v      v
+MCP Server  LiteLLM Proxy  WhatsApp Bridge
+(port 4000) (optional)    (port 5001)
+ |      v
+21 Windows Tools  Ollama
+(stdio)
 ```
 
 **Data flow for one AI action:**
@@ -73,54 +73,54 @@ YOU (User)
 mcp-servers/
 │
 ├── 📄 Core Entry Points
-│   ├── openclaw_main.py          ← Simple CLI chat entry point
-│   ├── openclaw_gateway.py       ← Full FastAPI REST gateway (main server)
+│   ├── winclaw_main.py          ← Simple CLI chat entry point
+│   ├── winclaw_gateway.py       ← Full FastAPI REST gateway (main server)
 │   ├── start_gateway.py          ← Helper to start gateway with env check
 │   ├── windows_mcp_server.py     ← The MCP server (21 Windows tools)
 │   └── windows_mcp_server.mjs    ← Node.js version of MCP server
 │
 ├── 📄 WhatsApp Integration
-│   ├── whatsapp_bridge_mcp.py        ← MCP wrapper for WhatsApp bridge
-│   ├── whatsapp_http_bridge.py       ← HTTP REST bridge server
-│   ├── whatsapp_log_bridge.py        ← Log-based bridge
+│   ├── whatsapp_bridge_mcp.py    ← MCP wrapper for WhatsApp bridge
+│   ├── whatsapp_http_bridge.py   ← HTTP REST bridge server
+│   ├── whatsapp_log_bridge.py    ← Log-based bridge
 │   └── whatsapp_log_bridge_server.py ← Bridge server (port 5001)
 │
 ├── 📄 Startup & Utilities
-│   ├── start_complete_system.bat     ← One-click: starts ALL services
-│   ├── check_system_status.bat       ← Check if all services are running
-│   ├── mcp-cli-tool.py               ← CLI interface for MCP tools
-│   └── requirements.txt              ← Python dependencies
+│   ├── start_complete_system.bat ← One-click: starts ALL services
+│   ├── check_system_status.bat   ← Check if all services are running
+│   ├── mcp-cli-tool.py           ← CLI interface for MCP tools
+│   └── requirements.txt          ← Python dependencies
 │
 ├── 📄 Config & Templates
-│   ├── .env.example                  ← ⭐ Copy this to .env and fill in keys
-│   ├── openclaw-mcp-config.template.json ← ⭐ Copy & customize for OpenClaw
-│   ├── config.json                   ← Server-level config (transport, logging)
-│   └── package.json                  ← Node.js config (for .mjs server)
+│   ├── .env.example              ← ⭐ Copy this to .env and fill in keys
+│   ├── winclaw-mcp-config.template.json ← ⭐ Copy & customize for WinClaw
+│   ├── config.json               ← Server-level config (transport, logging)
+│   └── package.json              ← Node.js config (for .mjs server)
 │
 ├── 📁 config/
-│   ├── agent_config.json     ← Agent behavior (retries, parallelism, caching)
-│   ├── api_config.json       ← API model & token settings
-│   ├── mcp_config.json       ← Which MCP servers to connect
-│   └── vision_config.json    ← Vision/screenshot settings
+│   ├── agent_config.json         ← Agent behavior (retries, parallelism, caching)
+│   ├── api_config.json           ← API model & token settings
+│   ├── mcp_config.json           ← Which MCP servers to connect
+│   └── vision_config.json        ← Vision/screenshot settings
 │
-├── 📁 tools/                 ← Individual MCP tool implementations
-│   ├── __init__.py           ← BaseTool class all tools inherit from
-│   ├── snapshot_tool.py      ← Take screenshot
-│   ├── click_tool.py         ← Mouse click
-│   ├── type_tool.py          ← Keyboard typing
-│   ├── scroll_tool.py        ← Mouse scroll
-│   ├── move_tool.py          ← Mouse move / drag
-│   ├── shortcut_tool.py      ← Keyboard shortcuts (Ctrl+C, Win+R, etc.)
-│   ├── shell_tool.py         ← Run PowerShell / CMD commands
-│   ├── app_tool.py           ← Launch / resize / switch apps
-│   ├── scrape_tool.py        ← Fetch web page content
-│   ├── wait_tool.py          ← Pause execution
-│   ├── window_tool.py        ← Window management
-│   ├── vision_tool.py        ← Google Vision API analysis
-│   ├── multiselect_tool.py   ← Multi-click (Ctrl+Click)
-│   └── multiedit_tool.py     ← Type in multiple fields at once
+├── 📁 tools/                     ← Individual MCP tool implementations
+│   ├── __init__.py               ← BaseTool class all tools inherit from
+│   ├── snapshot_tool.py          ← Take screenshot
+│   ├── click_tool.py             ← Mouse click
+│   ├── type_tool.py              ← Keyboard typing
+│   ├── scroll_tool.py            ← Mouse scroll
+│   ├── move_tool.py              ← Mouse move / drag
+│   ├── shortcut_tool.py          ← Keyboard shortcuts (Ctrl+C, Win+R, etc.)
+│   ├── shell_tool.py             ← Run PowerShell / CMD commands
+│   ├── app_tool.py               ← Launch / resize / switch apps
+│   ├── scrape_tool.py            ← Fetch web page content
+│   ├── wait_tool.py              ← Pause execution
+│   ├── window_tool.py            ← Window management
+│   ├── vision_tool.py            ← Google Vision API analysis
+│   ├── multiselect_tool.py       ← Multi-click (Ctrl+Click)
+│   └── multiedit_tool.py         ← Type in multiple fields at once
 │
-├── 📁 lib/                   ← Core library / brain of the agent
+├── 📁 lib/                       ← Core library / brain of the agent
 │   ├── __init__.py
 │   ├── mcp_manager.py            ← Manages MCP server connections
 │   ├── agent_integration.py      ← Enhanced agent wrapper
@@ -138,17 +138,17 @@ mcp-servers/
 │   ├── human_conversation_sentient.py ← Personality engine
 │   └── vision_analyzer.py        ← Screen understanding with Vision AI
 │
-├── 📁 utils/                 ← Helper utilities
+├── 📁 utils/                     ← Helper utilities
 │   ├── __init__.py
-│   ├── logger.py             ← Logging setup
-│   ├── admin.py              ← Windows admin privilege helpers
-│   ├── accessibility.py      ← Windows accessibility tree reader
-│   └── screenshot.py         ← Screenshot capture utilities
+│   ├── logger.py                 ← Logging setup
+│   ├── admin.py                  ← Windows admin privilege helpers
+│   ├── accessibility.py          ← Windows accessibility tree reader
+│   └── screenshot.py             ← Screenshot capture utilities
 │
-├── 📁 conversations/         ← 🔒 Auto-generated, gitignored
+├── 📁 conversations/             ← 🔒 Auto-generated, gitignored
 │   └── (saved chat sessions)
 │
-└── 📁 logs/                  ← 🔒 Auto-generated, gitignored
+└── 📁 logs/                      ← 🔒 Auto-generated, gitignored
     └── (runtime log files)
 ```
 
@@ -166,9 +166,9 @@ mcp-servers/
 
 **Quick check:** Open PowerShell and run:
 ```powershell
-python --version  # Should show 3.10+
-node --version    # Should show 18+
-git --version     # Any version is fine
+python --version # Should show 3.10+
+node --version # Should show 18+
+git --version # Any version is fine
 ```
 
 ---
@@ -177,8 +177,8 @@ git --version     # Any version is fine
 
 ### Step 1: Clone the Repository
 ```powershell
-git clone https://github.com/roshan-pixel/openclaw.git
-cd openclaw/mcp-servers
+git clone https://github.com/roshan-pixel/winclaw.git
+cd winclaw/mcp-servers
 ```
 
 ### Step 2: Set Up Python Virtual Environment (Recommended)
@@ -187,7 +187,7 @@ cd openclaw/mcp-servers
 python -m venv venv
 
 # Activate it (Windows PowerShell)
-.\venv\Scripts\Activate.ps1
+.\\venv\\Scripts\\Activate.ps1
 ```
 *You should see (venv) in your prompt now.*
 
@@ -210,18 +210,17 @@ copy .env.example .env
 # Open .env in Notepad and fill in your API key
 notepad .env
 ```
-In `.env`, replace the placeholder with your real Anthropic key:
-`ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxx...`
+In `.env`, replace the placeholder with your real Anthropic key: `ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxx...`
 
-### Step 6: Configure OpenClaw (if using with OpenClaw client)
+### Step 6: Configure WinClaw (if using with WinClaw client)
 ```powershell
 # Copy the template
-copy openclaw-mcp-config.template.json openclaw-mcp-config.json
+copy winclaw-mcp-config.template.json winclaw-mcp-config.json
 
 # Open and replace YOUR_ABSOLUTE_PATH with your actual path
-notepad openclaw-mcp-config.json
+notepad winclaw-mcp-config.json
 ```
-**Example:** replace `["/mcp-servers/mcp-cli-tool.py"]` with your path: `["C:/Users/YourName/openclaw/mcp-servers/mcp-cli-tool.py"]`
+**Example:** replace `["/mcp-servers/mcp-cli-tool.py"]` with your path: `["C:/Users/YourName/winclaw/mcp-servers/mcp-cli-tool.py"]`
 
 ---
 
@@ -264,7 +263,7 @@ notepad openclaw-mcp-config.json
 
 ### Option A: Simple CLI Chat (Easiest)
 ```powershell
-python openclaw_main.py
+python winclaw_main.py
 ```
 Type your instructions and press Enter. Claude will respond and take actions.
 
@@ -279,13 +278,13 @@ Invoke-WebRequest -Uri "http://localhost:18789/chat" -Method POST -ContentType "
 
 ### Option C: Start Everything at Once (Recommended)
 ```powershell
-.\start_complete_system.bat
+.\\start_complete_system.bat
 ```
 This opens 4 terminal windows:
 1. MCP Server — Windows tools (21 tools, stdio)
 2. LiteLLM Proxy — LLM routing (port 4000)
 3. WhatsApp Bridge — Message logging (port 5001)
-4. OpenClaw Gateway — Main API (port 18789)
+4. WinClaw Gateway — Main API (port 18789)
 
 ### Option D: MCP Server Standalone
 ```powershell
@@ -336,47 +335,45 @@ Invoke-WebRequest -Uri "http://localhost:5001/health"
 ## Troubleshooting
 
 - **Problem:** `ModuleNotFoundError: No module named 'mcp'`
-  - **Solution:** `pip install mcp anthropic`
+- **Solution:** `pip install mcp anthropic`
 - **Problem:** `ANTHROPIC_API_KEY` not found
-  - **Solution:** Ensure `.env` exists in the `mcp-servers/` directory with your key.
+- **Solution:** Ensure `.env` exists in the `mcp-servers/` directory with your key.
 - **Problem:** PowerShell script execution blocked
-  - **Solution:** `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- **Solution:** `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 - **Problem:** Screenshot tool fails or hangs
-  - **Solution:** Run PowerShell as Administrator or set `GODMODE=true` in `.env`.
+- **Solution:** Run PowerShell as Administrator or set `GODMODE=true` in `.env`.
 - **Problem:** Port 18789 already in use
-  - **Solution:** Find the PID using `netstat -ano | findstr :18789` and kill it with `taskkill /PID <PID> /F`.
+- **Solution:** Find the PID using `netstat -ano | findstr :18789` and kill it with `taskkill /PID /F`.
 
 **Run diagnostics:**
 ```powershell
-python diagnose_mcp_stdio.py  # Test MCP connection
-python diagnose_api_key.py    # Test your API key
-python test_prerequisites.py  # Check requirements
+python diagnose_mcp_stdio.py # Test MCP connection
+python diagnose_api_key.py # Test your API key
+python test_prerequisites.py # Check requirements
 ```
 
 ---
 
 ## FAQ for Beginners
 
-**Q: What is MCP?**
-A: Model Context Protocol is like a plug-in system for AI. It lets AI models call external tools (like 'take a screenshot' or 'run a command') during a conversation. Think of it like giving the AI hands.
+**Q: What is MCP?** A: Model Context Protocol is like a plug-in system for AI. It lets AI models call external tools (like 'take a screenshot' or 'run a command') during a conversation. Think of it like giving the AI hands.
 
-**Q: Do I need to pay for Claude?**
-A: You need an Anthropic API key, which has usage-based pricing. Alternatively, use Ollama with a free local model.
+**Q: Do I need to pay for Claude?** A: You need an Anthropic API key, which has usage-based pricing. Alternatively, use Ollama with a free local model.
 
-**Q: Can I use this without an Anthropic key?**
-A: Yes! Install Ollama, pull a model (`ollama pull deepseek-r1`), then set `OLLAMA_MODEL=deepseek-r1` in `.env`.
+**Q: Can I use this without an Anthropic key?** A: Yes! Install Ollama, pull a model (`ollama pull deepseek-r1`), then set `OLLAMA_MODEL=deepseek-r1` in `.env`.
 
-**Q: Is this safe?**
-A: The AI only does what you ask. The Shell tool can run any command, so be careful. Keep `GODMODE=false` until you're comfortable.
+**Q: Is this safe?** A: The AI only does what you ask. The Shell tool can run any command, so be careful. Keep `GODMODE=false` until you're comfortable.
 
 ---
 
 ## License
+
 MIT License — free to use, modify, and distribute.
 
 ---
 
 ## Contributing
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
 3. Commit changes: `git commit -m "Add my feature"`
