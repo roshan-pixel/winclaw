@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw Gateway v4.0 - ULTIMATE GOD MODE EDITION
+WinClaw Gateway v4.0 - ULTIMATE GOD MODE EDITION
 Full integration with ALL advanced systems:
 - Swarm Intelligence (Parallel Omnipresence)
 - Self-Synthesizing Tools (Auto-generates missing tools)
@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # ============================================================
 os.makedirs("logs", exist_ok=True)
 
-logger = logging.getLogger("openclaw_gateway")
+logger = logging.getLogger("WinClaw_gateway")
 logger.setLevel(logging.INFO)
 logger.propagate = False
 
@@ -110,7 +110,7 @@ except Exception as e:
 # ============================================================
 # CONFIG
 # ============================================================
-VALID_API_KEYS = set(os.environ.get("OPENCLAW_API_KEYS", "dev-key-123,test-key-456").split(","))
+VALID_API_KEYS = set(os.environ.get("WinClaw_API_KEYS", "dev-key-123,test-key-456").split(","))
 
 # Global instances
 mcp_manager: Optional[MCPManager] = None
@@ -256,7 +256,7 @@ async def lifespan(app: FastAPI):
     global self_synthesizing, predictive_engine, semantic_memory, sentient_conversation
 
     logger.info("=" * 70)
-    logger.info("🔥 OPENCLAW GATEWAY v4.0 - ULTIMATE GOD MODE 🔥")
+    logger.info("🔥 WinClaw GATEWAY v4.0 - ULTIMATE GOD MODE 🔥")
     logger.info("=" * 70)
 
     try:
@@ -395,7 +395,7 @@ async def lifespan(app: FastAPI):
 # ============================================================
 
 app = FastAPI(
-    title="OpenClaw Gateway - ULTIMATE GOD MODE",
+    title="WinClaw Gateway - ULTIMATE GOD MODE",
     description="Complete AI system with swarm intelligence, self-synthesis, prediction, memory, and human personality",
     version="4.0.0",
     docs_url="/docs",
@@ -427,7 +427,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 @app.get("/")
 async def root():
     return {
-        "service": "OpenClaw Gateway - ULTIMATE GOD MODE",
+        "service": "WinClaw Gateway - ULTIMATE GOD MODE",
         "version": "4.0.0",
         "status": "online",
         "features": {
@@ -817,14 +817,14 @@ async def create_response(request: ChatRequest):
 
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("🔥 OPENCLAW GATEWAY v4.0 - ULTIMATE GOD MODE 🔥")
+    print("🔥 WinClaw GATEWAY v4.0 - ULTIMATE GOD MODE 🔥")
     print("="*70)
     print("Starting server on http://0.0.0.0:8000")
     print("API Docs: http://localhost:8000/docs")
     print("="*70 + "\n")
 
     uvicorn.run(
-        "openclaw_gateway:app",
+        "WinClaw_gateway:app",
         host="0.0.0.0",
         port=8000,
         reload=False,
