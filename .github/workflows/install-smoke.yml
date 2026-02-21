@@ -31,6 +31,8 @@ jobs:
     needs: [docs-scope]
     if: needs.docs-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout CLI
         uses: actions/checkout@v4

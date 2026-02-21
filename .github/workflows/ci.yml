@@ -36,6 +36,8 @@ jobs:
     needs: [docs-scope]
     if: needs.docs-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       run_node: ${{ steps.scope.outputs.run_node }}
       run_macos: ${{ steps.scope.outputs.run_macos }}
@@ -130,6 +132,8 @@ jobs:
     needs: [docs-scope, changed-scope, check]
     if: needs.docs-scope.outputs.docs_only != 'true' && (github.event_name == 'push' || needs.changed-scope.outputs.run_node == 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -156,6 +160,8 @@ jobs:
     needs: [docs-scope, build-artifacts]
     if: github.event_name == 'push' && needs.docs-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -180,6 +186,8 @@ jobs:
     needs: [docs-scope, changed-scope, check]
     if: needs.docs-scope.outputs.docs_only != 'true' && (github.event_name == 'push' || needs.changed-scope.outputs.run_node == 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -247,6 +255,8 @@ jobs:
     needs: [docs-scope]
     if: needs.docs-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -266,6 +276,8 @@ jobs:
     needs: [docs-scope]
     if: needs.docs-scope.outputs.docs_changed == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -311,6 +323,8 @@ jobs:
     needs: [docs-scope, changed-scope, build-artifacts, check]
     if: needs.docs-scope.outputs.docs_only != 'true' && (github.event_name == 'push' || needs.changed-scope.outputs.run_node == 'true')
     runs-on: windows-latest
+    permissions:
+      contents: read
     env:
       NODE_OPTIONS: --max-old-space-size=4096
       # Keep total concurrency predictable on the 16 vCPU runner:
@@ -432,6 +446,8 @@ jobs:
     needs: [docs-scope, changed-scope, check]
     if: github.event_name == 'pull_request' && needs.docs-scope.outputs.docs_only != 'true' && needs.changed-scope.outputs.run_macos == 'true'
     runs-on: macos-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -504,6 +520,8 @@ jobs:
   ios:
     if: false # ignore iOS in CI for now
     runs-on: macos-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -665,6 +683,8 @@ jobs:
     needs: [docs-scope, changed-scope, check]
     if: needs.docs-scope.outputs.docs_only != 'true' && (github.event_name == 'push' || needs.changed-scope.outputs.run_android == 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
