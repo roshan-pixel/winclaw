@@ -1,14 +1,26 @@
 """sheets_tool.py - Google Sheets MCP tool for OpenClaw"""
 import json
+import os
 from pathlib import Path
 
-TOKEN_PATH = Path(r"C:\Users\sgarm\.openclaw\credentials\google_workspace_token.json")
+DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(DEFAULT_STATE_DIR))).expanduser()
+TOKEN_PATH = Path(
+    os.environ.get(
+        "OPENCLAW_GOOGLE_TOKEN_PATH",
+        str(OPENCLAW_STATE_DIR / "credentials" / "google_workspace_token.json"),
+    )
+)
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 def _get_service():
     from google.oauth2.credentials import Credentials
     from google.auth.transport.requests import Request
     from googleapiclient.discovery import build
+    if not TOKEN_PATH.exists():
+        raise FileNotFoundError(
+            f"Google token not found at {TOKEN_PATH}. Set OPENCLAW_GOOGLE_TOKEN_PATH."
+        )
     creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())

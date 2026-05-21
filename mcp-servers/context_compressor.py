@@ -7,21 +7,24 @@ Ref: gitee.com/free/claude-code AutoCompactManager
 import json
 import logging
 import os
+from pathlib import Path
 import requests
 
 # Ensure logs dir exists at import time (double-guard per TASK-00 note)
-_LOG_DIR = r"C:\Users\sgarm\.openclaw\logs"
-os.makedirs(_LOG_DIR, exist_ok=True)
+_DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+_OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(_DEFAULT_STATE_DIR))).expanduser()
+_LOG_DIR = Path(os.environ.get("OPENCLAW_LOG_DIR", str(_OPENCLAW_STATE_DIR / "logs")))
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
-    filename=os.path.join(_LOG_DIR, "compress.log"),
+    filename=str(_LOG_DIR / "compress.log"),
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
 logger = logging.getLogger("openclaw.compressor")
 
-QWEN_URL     = "http://localhost:18788/v1/chat/completions"
-QWEN_MODEL   = "qwen-godmode"
+QWEN_URL     = os.environ.get("OPENCLAW_QWEN_URL", "http://localhost:18788/v1/chat/completions")
+QWEN_MODEL   = os.environ.get("OPENCLAW_QWEN_MODEL", "qwen-godmode")
 QWEN_TIMEOUT = 60   # seconds per Qwen call (session compact)
 FULL_TIMEOUT = 30   # seconds per Qwen call (full compact rounds)
 CIRCUIT_BREAK_LIMIT = 3

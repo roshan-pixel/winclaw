@@ -10,9 +10,13 @@ Author: Claude Sonnet 4.6 — 2026-03-28
 """
 
 import json, os, sys, logging
+from pathlib import Path
 
 log_handlers = [logging.StreamHandler(sys.stderr)]
-log_path = r"C:\Users\sgarm\.openclaw\logs\mem0_mcp.log"
+DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(DEFAULT_STATE_DIR))).expanduser()
+LOG_DIR = Path(os.environ.get("OPENCLAW_LOG_DIR", str(OPENCLAW_STATE_DIR / "logs")))
+log_path = str(LOG_DIR / "mem0_mcp.log")
 try:
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     log_handlers.append(logging.FileHandler(log_path, encoding="utf-8"))
@@ -27,12 +31,12 @@ logging.basicConfig(
 )
 log = logging.getLogger("mem0-mcp")
 
-DEFAULT_USER_ID = "sgarm"
-MEM0_DATA_DIR   = r"C:\Users\sgarm\.openclaw\memory\mem0_store"
-OLLAMA_BASE_URL  = "http://localhost:11434"
-OLLAMA_LLM_MODEL = "deepseek-r1-godmode"
-OLLAMA_EMBED_MODEL = "nomic-embed-text"
-TOP_K = 5
+DEFAULT_USER_ID = os.environ.get("OPENCLAW_DEFAULT_USER_ID", "default")
+MEM0_DATA_DIR = os.environ.get("OPENCLAW_MEM0_DATA_DIR", str(OPENCLAW_STATE_DIR / "memory" / "mem0_store"))
+OLLAMA_BASE_URL = os.environ.get("OPENCLAW_OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_LLM_MODEL = os.environ.get("OPENCLAW_MEM0_LLM_MODEL", "deepseek-r1-godmode")
+OLLAMA_EMBED_MODEL = os.environ.get("OPENCLAW_MEM0_EMBED_MODEL", "nomic-embed-text")
+TOP_K = int(os.environ.get("OPENCLAW_MEM0_TOP_K", "5"))
 
 TOOLS = {
     "mem0-search": {

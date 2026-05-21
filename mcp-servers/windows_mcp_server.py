@@ -182,13 +182,13 @@ async def list_tools() -> list[Tool]:
     # Add standard READ tool first
     tools.append(Tool(
         name="read",
-        description="Read file or resource content. You MUST provide the full absolute file path in the `path` parameter (e.g. C:\\Users\\sgarm\\file.txt). Calling without a path returns a directory listing.",
+        description="Read file or resource content. You MUST provide the full absolute file path in the `path` parameter (e.g. C:\\path\\to\\file.txt). Calling without a path returns a directory listing.",
         inputSchema={
             "type": "object",
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "REQUIRED: Full absolute file path to read (e.g. C:\\Users\\sgarm\\file.txt)"
+                    "description": "REQUIRED: Full absolute file path to read (e.g. C:\\path\\to\\file.txt)"
                 }
             },
             "required": ["path"]

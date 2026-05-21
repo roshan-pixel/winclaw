@@ -3,7 +3,7 @@
 context_manager_godmode.py — Hard UX Limits + Recap on Demand  v2.0
 =====================================================================
 SAVE TO:
-  C:/Users/sgarm/openclaw-repos/openclaw/mcp-servers/context_manager.py
+  <repo>/mcp-servers/context_manager.py
 
 WHAT'S NEW IN v2.0:
   + RecapEngine injected via Protocol interface (swap any engine)
@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import threading
 import time
@@ -42,6 +43,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 logger = logging.getLogger("context_manager")
+
+DEFAULT_RECAP_API_URL = os.environ.get("OPENCLAW_RECAP_API_URL", "http://localhost:18788/webhook")
 
 # ══════════════════════════════════════════════════════════════════
 # LIMIT PROFILES  (NEW: configurable presets)
@@ -543,7 +546,7 @@ class APIRecapEngine:
 
     def __init__(
         self,
-        api_url:      str   = "http://localhost:18788/webhook",
+        api_url:      str   = DEFAULT_RECAP_API_URL,
         timeout_sec:  float = 8.0,
         max_words:    int   = 120,
     ):
@@ -629,13 +632,13 @@ class RecapEngineFactory:
     Convenience factory for building recap engines.
 
     Usage:
-        engine = RecapEngineFactory.api(url="http://localhost:18788/webhook")
+        engine = RecapEngineFactory.api(url=DEFAULT_RECAP_API_URL)
         engine = RecapEngineFactory.extractive()
         engine = RecapEngineFactory.auto()   # API with extractive fallback (default)
     """
 
     @staticmethod
-    def api(url: str = "http://localhost:18788/webhook",
+    def api(url: str = DEFAULT_RECAP_API_URL,
             timeout: float = 8.0, max_words: int = 120) -> APIRecapEngine:
         return APIRecapEngine(api_url=url, timeout_sec=timeout, max_words=max_words)
 
@@ -705,8 +708,13 @@ RESET_TRIGGERS = frozenset([
     "clear history", "new conversation",
 ])
 
+_DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+_OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(_DEFAULT_STATE_DIR))).expanduser()
 PERSIST_PATH = Path(
-    "C:/Users/sgarm/openclaw-repos/openclaw/mcp-servers/data/ctx_state.json"
+    os.environ.get(
+        "OPENCLAW_CONTEXT_STATE_PATH",
+        str(_OPENCLAW_STATE_DIR / "data" / "ctx_state.json"),
+    )
 )
 
 # ══════════════════════════════════════════════════════════════════

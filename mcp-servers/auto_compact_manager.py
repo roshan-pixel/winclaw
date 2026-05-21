@@ -13,22 +13,26 @@ import logging
 import os
 import threading
 import time
+from pathlib import Path
 
 from token_tracker import TokenTracker
 from micro_compact import micro_compact
 from context_compressor import session_memory_compact, full_compact
 
-_LOG_DIR = r"C:\Users\sgarm\.openclaw\logs"
-os.makedirs(_LOG_DIR, exist_ok=True)
+_DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+_OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(_DEFAULT_STATE_DIR))).expanduser()
+_LOG_DIR = Path(os.environ.get("OPENCLAW_LOG_DIR", str(_OPENCLAW_STATE_DIR / "logs")))
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
-    filename=os.path.join(_LOG_DIR, "compress.log"),
+    filename=str(_LOG_DIR / "compress.log"),
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
 logger = logging.getLogger("openclaw.auto_compact")
 
 # WhatsApp bridge for CRITICAL alerts (imported lazily to avoid circular import)
-_WHATSAPP_OWNER = "+918529911832"
+_WHATSAPP_OWNER = os.environ.get("OPENCLAW_ALERT_PHONE", "").strip()
+_WHATSAPP_ALERT_URL = os.environ.get("OPENCLAW_ALERT_URL", "http://localhost:5001/send")
 _ALERT_COOLDOWN_SEC = 300   # 5-minute rate limit on CRITICAL WhatsApp alerts
 
 
@@ -149,6 +153,8 @@ class AutoCompactManager:
     # ------------------------------------------------------------------
 
     def _maybe_send_critical_alert(self, ratio: float) -> None:
+        if not _WHATSAPP_OWNER:
+            return
         now = time.time()
         if now - self._last_alert_ts < _ALERT_COOLDOWN_SEC:
             return
@@ -161,7 +167,7 @@ class AutoCompactManager:
         try:
             import requests
             requests.post(
-                "http://localhost:5001/send",
+                _WHATSAPP_ALERT_URL,
                 json={"to": _WHATSAPP_OWNER, "message": msg},
                 timeout=5,
             )

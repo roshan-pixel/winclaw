@@ -180,7 +180,11 @@ echo   6. OpenClaw Gateway (18789) - WhatsApp Handler
 echo.
 echo Gateway Options:
 echo ----------------
-echo   WhatsApp: Send to +918058363027 (uses port 18789)
+if "%OPENCLAW_TEST_WHATSAPP%"=="" (
+  echo   WhatsApp: Send to YOUR_PHONE_NUMBER (uses port 18789^)
+) else (
+  echo   WhatsApp: Send to %OPENCLAW_TEST_WHATSAPP% (uses port 18789^)
+)
 echo   Webhook:  POST to http://localhost:18788/webhook
 echo.
 echo Features Active:
@@ -196,7 +200,11 @@ echo QUICK COMMANDS:
 echo ========================================
 echo.
 echo Test WhatsApp:
-echo   Send message to +918058363027
+if "%OPENCLAW_TEST_WHATSAPP%"=="" (
+  echo   Set OPENCLAW_TEST_WHATSAPP and send a test message
+) else (
+  echo   Send message to %OPENCLAW_TEST_WHATSAPP%
+)
 echo.
 echo Check All Ports:
 echo   netstat -ano ^| findstr ":4000 :5001 :11434 :18788 :18789"

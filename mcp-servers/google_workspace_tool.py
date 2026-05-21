@@ -12,7 +12,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 from tools import BaseTool
 from mcp.types import Tool, TextContent
 
-TOKEN_PATH = Path(r"C:\Users\sgarm\.openclaw\credentials\google_workspace_token.json")
+DEFAULT_STATE_DIR = Path(os.environ.get("OPENCLAW_HOME", str(Path.home()))).expanduser() / ".openclaw"
+OPENCLAW_STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", str(DEFAULT_STATE_DIR))).expanduser()
+TOKEN_PATH = Path(
+    os.environ.get(
+        "OPENCLAW_GOOGLE_TOKEN_PATH",
+        str(OPENCLAW_STATE_DIR / "credentials" / "google_workspace_token.json"),
+    )
+)
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
@@ -26,9 +33,13 @@ def _get_creds():
     from google.oauth2.credentials import Credentials
     from google.auth.transport.requests import Request
     if not TOKEN_PATH.exists():
+        setup_cmd = os.environ.get(
+            "OPENCLAW_GOOGLE_AUTH_SETUP_CMD",
+            "python <path-to-google_auth_setup.py>",
+        )
         raise FileNotFoundError(
             f"Google Workspace token not found at {TOKEN_PATH}. "
-            "Run: C:\\Python314\\python.exe C:\\Users\\sgarm\\.openclaw\\workspace\\google_auth_setup.py"
+            f"Create one and/or set OPENCLAW_GOOGLE_TOKEN_PATH. Suggested command: {setup_cmd}"
         )
     creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
     if creds.expired and creds.refresh_token:

@@ -9,14 +9,20 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { execSync, exec } from "child_process";
 import { randomUUID } from "crypto";
+import fs from "fs";
 import http from "http";
 import { createRequire } from "module";
+import os from "os";
+import path from "path";
 import { promisify } from "util";
 
 const require = createRequire(import.meta.url);
 const execAsync = promisify(exec);
 
 const PORT = 18790;
+const defaultStateDir = path.join(process.env.OPENCLAW_HOME || os.homedir(), ".openclaw");
+const stateDir = process.env.OPENCLAW_STATE_DIR || defaultStateDir;
+const SCREENSHOT_DIR = process.env.OPENCLAW_SCREENSHOT_DIR || stateDir;
 
 // ─── PowerShell Helper ──────────────────────────────────────────────────────
 function runPS(command, timeoutMs = 15000) {
@@ -112,8 +118,8 @@ async function executeTool(name, args) {
     }
 
     case "windows_snapshot": {
-      const outPath =
-        args.output_path || `C:\\Users\\sgarm\\.openclaw\\screenshot_${Date.now()}.png`;
+      const outPath = args.output_path || path.join(SCREENSHOT_DIR, `screenshot_${Date.now()}.png`);
+      fs.mkdirSync(path.dirname(outPath), { recursive: true });
       const ps = `
 Add-Type -AssemblyName System.Windows.Forms,System.Drawing
 $b=[System.Drawing.Rectangle]::FromLTRB(0,0,[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width,[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height)
