@@ -211,5 +211,66 @@ class FileSystemTool:
         except Exception as e:
             return {'error': str(e)}
 
+
+# ── MCP Tool Interface ────────────────────────────────────────────────────
+    def get_tool_definition(self):
+        from mcp.types import Tool
+        return Tool(
+            name="windows-mcp-file-system",
+            description="God-level Windows file system: read, write, list, copy, move, delete, search, archive, hash, permissions.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": ["read","write","list","copy","move","delete","search","info","hash","archive","extract","permissions","attributes"],
+                        "description": "Operation mode"
+                    },
+                    "path": {"type": "string", "description": "Source path"},
+                    "destination": {"type": "string", "description": "Destination path (copy/move/archive)"},
+                    "content": {"type": "string", "description": "File content (write)"},
+                    "pattern": {"type": "string", "description": "Search glob pattern"},
+                    "recursive": {"type": "boolean", "default": False},
+                    "append": {"type": "boolean", "default": False},
+                    "force": {"type": "boolean", "default": False},
+                    "lines": {"type": "integer", "description": "Max lines to read"},
+                    "algorithm": {"type": "string", "default": "md5", "description": "Hash algorithm"},
+                    "format_type": {"type": "string", "default": "zip"},
+                    "mode_octal": {"type": "integer", "description": "chmod mode integer"},
+                    "hidden": {"type": "boolean", "default": False},
+                    "readonly": {"type": "boolean", "default": False}
+                },
+                "required": ["mode", "path"]
+            }
+        )
+
+    async def execute(self, arguments: dict):
+        from mcp.types import TextContent
+        import json as _json
+        import pathlib as _pl
+        mode = arguments.get("mode", "")
+        path = arguments.get("path", "")
+        try:
+            if mode == "info":      result = self.get_file_info(path)
+            elif mode == "list":    result = self.list_directory(path, arguments.get("recursive", False))
+            elif mode == "read":    result = self.read_file(path, arguments.get("lines"))
+            elif mode == "write":   result = self.write_file(path, arguments.get("content",""), arguments.get("append", False))
+            elif mode == "copy":    result = self.copy_file(path, arguments["destination"])
+            elif mode == "move":    result = self.move_file(path, arguments["destination"])
+            elif mode == "delete":
+                p = _pl.Path(path)
+                result = self.delete_directory(path, arguments.get("recursive", False)) if p.is_dir() else self.delete_file(path, arguments.get("force", False))
+            elif mode == "search":  result = self.search_files(path, arguments.get("pattern","*"), arguments.get("recursive", True))
+            elif mode == "hash":    result = self.calculate_hash(path, arguments.get("algorithm","md5"))
+            elif mode == "archive": result = self.create_archive(path, arguments["destination"], arguments.get("format_type","zip"))
+            elif mode == "extract": result = self.extract_archive(path, arguments["destination"])
+            elif mode == "permissions": result = self.change_permissions(path, arguments.get("mode_octal", 0o644))
+            elif mode == "attributes":  result = self.set_file_attributes(path, arguments.get("hidden",False), arguments.get("readonly",False))
+            else: result = {"error": f"Unknown mode: {mode}"}
+        except Exception as e:
+            result = {"error": str(e)}
+        return [TextContent(type="text", text=_json.dumps(result, indent=2, default=str))]
+
+
 # Export the tool
 file_system_tool = FileSystemTool()

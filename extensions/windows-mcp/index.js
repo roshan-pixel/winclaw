@@ -1,63 +1,78 @@
-const { MCPBridge } = require('./mcp-bridge.js');
-const path = require('path');
+﻿/**
+ * windows-mcp openclaw plugin — HTTP client edition
+ * Connects to the standalone windows_mcp_http_server.mjs on port 18790
+ * instead of spawning a subprocess.
+ */
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-let mcpBridge = null;
-let toolsReady = false;
-let registeredTools = [];
+const MCP_URL = "http://127.0.0.1:18790/mcp";
+const MAX_TOOLS = 20;
+const CONNECT_RETRY_MS = 3000;
+const CONNECT_MAX_ATTEMPTS = 5;
 
-// Start MCP server immediately
-const serverPath = path.join(__dirname, '..', '..', 'mcp-servers', 'windows_mcp_server.py');
-mcpBridge = new MCPBridge(serverPath);
+let client = null;
+let tools = [];
+let ready = false;
 
-// Start server in background
-mcpBridge.start().then(tools => {
-  console.log(`[windows-mcp] Successfully loaded ${tools.length} tools from MCP server`);
-  registeredTools = tools;
-  toolsReady = true;
-}).catch(error => {
-  console.error('[windows-mcp] Failed to start MCP server:', error);
-});
-
-module.exports = function register(api) {
-  console.log('[windows-mcp] Registering plugin...');
-  
-  // Register a proxy tool that waits for MCP server to be ready
-  for (let i = 0; i < 12; i++) {
-    api.registerTool(
-      (ctx) => {
-        if (ctx.sandboxed) return null;
-        
-        return {
-          name: `windows-mcp-tool-${i}`,
-          description: 'Windows automation tool (loading...)',
-          inputSchema: { type: 'object', properties: {} },
-          execute: async (args) => {
-            // Wait for tools to be ready
-            if (!toolsReady) {
-              return {
-                content: [{ type: 'text', text: 'MCP server is still initializing...' }]
-              };
-            }
-            
-            // Get the actual tool
-            const tool = registeredTools[i];
-            if (!tool) {
-              return {
-                content: [{ type: 'text', text: 'Tool not found' }]
-              };
-            }
-            
-            // Execute the tool via MCP bridge
-            const result = await mcpBridge.callTool(tool.name, args);
-            return {
-              content: result || [{ type: 'text', text: 'Done' }]
-            };
-          }
-        };
-      },
-      { optional: true }
+async function connect(attempt = 1) {
+  try {
+    const transport = new StreamableHTTPClientTransport(new URL(MCP_URL));
+    const c = new Client({ name: "openclaw-windows-mcp", version: "1.0.0" }, { capabilities: {} });
+    await c.connect(transport);
+    const result = await c.listTools();
+    client = c;
+    tools = result.tools || [];
+    ready = true;
+    console.log(
+      `[windows-mcp] Connected to HTTP MCP server. ${tools.length} tools: ${tools.map((t) => t.name).join(", ")}`,
     );
+  } catch (err) {
+    console.error(`[windows-mcp] Connection attempt ${attempt} failed: ${err.message}`);
+    if (attempt < CONNECT_MAX_ATTEMPTS) {
+      console.log(`[windows-mcp] Retrying in ${CONNECT_RETRY_MS}ms...`);
+      setTimeout(() => connect(attempt + 1), CONNECT_RETRY_MS);
+    } else {
+      console.error(`[windows-mcp] Could not connect to windows-mcp HTTP server at ${MCP_URL}`);
+      console.error(`[windows-mcp] Start it with: node windows_mcp_http_server.mjs`);
+    }
   }
-  
-  console.log('[windows-mcp] Registered 12 tool slots');
-};
+}
+
+// Start connecting immediately
+connect();
+
+export default function register(api) {
+  console.log("[windows-mcp] Registering HTTP-backed plugin...");
+
+  // Register a slot for each possible tool (we discover them at runtime)
+  for (let i = 0; i < MAX_TOOLS; i++) {
+    api.registerTool((ctx) => {
+      if (ctx.sandboxed) return null;
+      if (!ready) return null;
+      const tool = tools[i];
+      if (!tool) return null;
+
+      return {
+        name: tool.name,
+        description: tool.description || `Windows tool: ${tool.name}`,
+        inputSchema: tool.inputSchema || { type: "object", properties: {} },
+        execute: async (args) => {
+          try {
+            const result = await client.callTool({ name: tool.name, arguments: args });
+            const text =
+              result.content
+                ?.map((c) => (c.type === "text" ? c.text : JSON.stringify(c)))
+                .join("\n") || "Done";
+            return { content: [{ type: "text", text }] };
+          } catch (err) {
+            // Try reconnecting
+            ready = false;
+            connect();
+            return { content: [{ type: "text", text: `Error (reconnecting): ${err.message}` }] };
+          }
+        },
+      };
+    });
+  }
+}

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Task Scheduler Tool - Windows Task Scheduler operations
 """
 
@@ -9,12 +9,12 @@ from mcp.types import Tool, TextContent
 class TaskSchedulerTool:
     """Manage Windows scheduled tasks"""
     
-    requires_admin = True
+    requires_admin = False
     
     def get_tool_definition(self) -> Tool:
         return Tool(
             name="Windows-MCP:TaskScheduler",
-            description="Create, delete, enable, disable, and list Windows scheduled tasks. Requires admin privileges.",
+            description="Create, delete, enable, disable, and list Windows scheduled tasks.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -66,7 +66,7 @@ class TaskSchedulerTool:
                 )
                 return [TextContent(
                     type="text",
-                    text=f"✓ Scheduled tasks:\n{result.stdout}"
+                    text=f"âœ“ Scheduled tasks:\n{result.stdout}"
                 )]
             
             elif action == "create":
@@ -88,12 +88,12 @@ class TaskSchedulerTool:
                 if result.returncode == 0:
                     return [TextContent(
                         type="text",
-                        text=f"✓ Task created: {task_name}\nCommand: {command}\nTrigger: {trigger} at {start_time}"
+                        text=f"âœ“ Task created: {task_name}\nCommand: {command}\nTrigger: {trigger} at {start_time}"
                     )]
                 else:
                     return [TextContent(
                         type="text",
-                        text=f"✗ Failed to create task:\n{result.stderr}"
+                        text=f"âœ— Failed to create task:\n{result.stderr}"
                     )]
             
             elif action == "delete":
@@ -107,12 +107,12 @@ class TaskSchedulerTool:
                 if result.returncode == 0:
                     return [TextContent(
                         type="text",
-                        text=f"✓ Task deleted: {task_name}"
+                        text=f"âœ“ Task deleted: {task_name}"
                     )]
                 else:
                     return [TextContent(
                         type="text",
-                        text=f"✗ Failed to delete task:\n{result.stderr}"
+                        text=f"âœ— Failed to delete task:\n{result.stderr}"
                     )]
             
             elif action == "enable":
@@ -124,7 +124,7 @@ class TaskSchedulerTool:
                 )
                 return [TextContent(
                     type="text",
-                    text=f"✓ Task enabled: {task_name}"
+                    text=f"âœ“ Task enabled: {task_name}"
                 )]
             
             elif action == "disable":
@@ -136,7 +136,7 @@ class TaskSchedulerTool:
                 )
                 return [TextContent(
                     type="text",
-                    text=f"✓ Task disabled: {task_name}"
+                    text=f"âœ“ Task disabled: {task_name}"
                 )]
             
             elif action == "run":
@@ -148,7 +148,7 @@ class TaskSchedulerTool:
                 )
                 return [TextContent(
                     type="text",
-                    text=f"✓ Task started: {task_name}"
+                    text=f"âœ“ Task started: {task_name}"
                 )]
             
             elif action == "info":
@@ -160,16 +160,17 @@ class TaskSchedulerTool:
                 )
                 return [TextContent(
                     type="text",
-                    text=f"✓ Task info for {task_name}:\n{result.stdout}"
+                    text=f"âœ“ Task info for {task_name}:\n{result.stdout}"
                 )]
         
         except subprocess.TimeoutExpired:
             return [TextContent(
                 type="text",
-                text=f"✗ Operation timed out"
+                text=f"âœ— Operation timed out"
             )]
         except Exception as e:
             return [TextContent(
                 type="text",
-                text=f"✗ Task scheduler operation failed: {str(e)}"
+                text=f"âœ— Task scheduler operation failed: {str(e)}"
             )]
+

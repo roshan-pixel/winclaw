@@ -48,11 +48,14 @@ class MoveTool(BaseTool):
         y = arguments["y"]
         
         try:
+            print(f"Attempting to move cursor to X:{x}, Y:{y}")
             pyautogui.moveTo(x, y, duration=0.2)
+            print(f"Successfully called pyautogui.moveTo({x}, {y})")
             result_text = f"Moved to ({x}, {y})"
             logger.info(result_text)
             return [TextContent(type="text", text=result_text)]
-            
+
         except Exception as e:
+            print(f"ERROR: Move failed for coordinates ({x}, {y}): {e}")
             logger.error(f"Move failed: {e}", exc_info=True)
             return [TextContent(type="text", text=f"ERROR: {str(e)}")]

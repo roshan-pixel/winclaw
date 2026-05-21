@@ -58,7 +58,7 @@ class BaseTool(ABC):
         return True, ""
 
 
-# Import all tool classes (12 tools only)
+# Import all tool classes (16 tools)
 from .click_tool import ClickTool
 from .type_tool import TypeTool
 from .scroll_tool import ScrollTool
@@ -71,6 +71,9 @@ from .wait_tool import WaitTool
 from .scrape_tool import ScrapeTool
 from .multiselect_tool import MultiSelectTool
 from .multiedit_tool import MultiEditTool
+from .window_tool import WindowTool
+from .execute_tool import ExecuteTool
+from .vision_tool import VisionTool
 
 __all__ = [
     'BaseTool',
@@ -86,4 +89,7 @@ __all__ = [
     'ScrapeTool',
     'MultiSelectTool',
     'MultiEditTool',
+    'WindowTool',
+    'ExecuteTool',
+    'VisionTool',
 ]

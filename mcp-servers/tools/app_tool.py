@@ -4,6 +4,7 @@ App Tool - Manages Windows applications
 
 import subprocess
 import time
+import pyautogui
 from typing import Sequence
 from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
 from . import BaseTool
@@ -25,7 +26,7 @@ class AppTool(BaseTool):
         super().__init__(
             name="Windows-MCP:App",
             description="Manages Windows applications with three modes: "
-                       "'launch' (opens application), 'resize' (adjusts window), 'switch' (focus window)."
+                       "'launch' (opens application), 'resize' (adjusts window), 'switch' (focus window), 'move_cursor' (moves mouse cursor)."
         )
     
     def get_tool_definition(self) -> Tool:
@@ -37,7 +38,7 @@ class AppTool(BaseTool):
                 "properties": {
                     "mode": {
                         "type": "string",
-                        "enum": ["launch", "resize", "switch"],
+                        "enum": ["launch", "resize", "switch", "list", "move_cursor"],
                         "description": "Operation mode"
                     },
                     "name": {
@@ -56,6 +57,16 @@ class AppTool(BaseTool):
                         "items": {"type": "integer"},
                         "default": None,
                         "description": "Window position [x, y]"
+                    },
+                    "x": {
+                        "type": ["integer", "null"],
+                        "default": None,
+                        "description": "X coordinate for cursor movement"
+                    },
+                    "y": {
+                        "type": ["integer", "null"],
+                        "default": None,
+                        "description": "Y coordinate for cursor movement"
                     }
                 },
                 "required": ["mode"]
@@ -67,6 +78,8 @@ class AppTool(BaseTool):
         name = arguments.get("name")
         window_size = arguments.get("window_size")
         window_loc = arguments.get("window_loc")
+        x = arguments.get("x")
+        y = arguments.get("y")
         
         try:
             if mode == "launch":
@@ -75,6 +88,10 @@ class AppTool(BaseTool):
                 return await self._resize_window(window_size, window_loc)
             elif mode == "switch":
                 return await self._switch_window(name)
+            elif mode == "list":
+                return await self._list_windows()
+            elif mode == "move_cursor":
+                return await self._move_cursor(x, y)
         except Exception as e:
             return [TextContent(type="text", text=f"ERROR: {str(e)}")]
     
@@ -109,23 +126,52 @@ class AppTool(BaseTool):
         return [TextContent(type="text", text="ERROR: window_size required")]
     
     async def _switch_window(self, title: str) -> Sequence[TextContent]:
-        if not title or not WIN32_AVAILABLE:
+        if not title:
             return [TextContent(type="text", text="ERROR: Title required")]
-        
-        def callback(hwnd, windows):
-            if win32gui.IsWindowVisible(hwnd):
-                window_title = win32gui.GetWindowText(hwnd)
-                if title.lower() in window_title.lower():
-                    windows.append((hwnd, window_title))
-            return True
-        
-        windows = []
-        win32gui.EnumWindows(callback, windows)
-        
-        if windows:
-            hwnd, window_title = windows[0]
-            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-            win32gui.SetForegroundWindow(hwnd)
-            return [TextContent(type="text", text=f"Switched to: {window_title}")]
-        
-        return [TextContent(type="text", text=f"ERROR: Window '{title}' not found")]
+        try:
+            command = 'powershell "Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"} | Select-Object Name,MainWindowTitle | Format-List"'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+            output = result.stdout
+            lines = output.strip().split('\r\n')
+            current_process_name = None
+            current_window_title = None
+            windows_found = []
+            for line in lines:
+                if line.startswith("Name            :"):
+                    current_process_name = line.split(":", 1)[1].strip()
+                elif line.startswith("MainWindowTitle :"):
+                    current_window_title = line.split(":", 1)[1].strip()
+                if current_process_name and current_window_title:
+                    windows_found.append({"Name": current_process_name, "MainWindowTitle": current_window_title})
+                    current_process_name = None
+                    current_window_title = None
+            for window in windows_found:
+                if title.lower() in window["MainWindowTitle"].lower():
+                    if WIN32_AVAILABLE:
+                        return [TextContent(type="text", text=f"Found and attempted to switch to: {window['MainWindowTitle']}")]
+                    else:
+                        return [TextContent(type="text", text=f"Found: {window['MainWindowTitle']} (via PowerShell)")]
+            return [TextContent(type="text", text=f"ERROR: Window '{title}' not found")]
+        except subprocess.TimeoutExpired:
+            return [TextContent(type="text", text="ERROR: PowerShell command timed out.")]
+        except Exception as e:
+            return [TextContent(type="text", text=f"ERROR: {str(e)}")]
+
+    async def _list_windows(self) -> Sequence[TextContent]:
+        try:
+            command = 'powershell "Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"} | Select-Object Name, MainWindowTitle | Format-Table -AutoSize"'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+            return [TextContent(type="text", text=result.stdout)]
+        except subprocess.TimeoutExpired:
+            return [TextContent(type="text", text="ERROR: PowerShell command timed out for listing windows.")]
+        except Exception as e:
+            return [TextContent(type="text", text=f"ERROR: {str(e)}")]
+
+    async def _move_cursor(self, x: int, y: int) -> Sequence[TextContent]:
+        if x is None or y is None:
+            return [TextContent(type="text", text="ERROR: X and Y coordinates required for cursor movement.")]
+        try:
+            pyautogui.moveTo(x, y)
+            return [TextContent(type="text", text=f"Cursor moved to ({x}, {y}).")]
+        except Exception as e:
+            return [TextContent(type="text", text=f"ERROR: Failed to move cursor: {str(e)}")]

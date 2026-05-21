@@ -18,7 +18,7 @@ class ServiceManagerTool(BaseTool):
             name="Windows-MCP:ServiceManager",
             description="Start, stop, restart Windows services and query service status."
         )
-        self.requires_admin = True
+        self.requires_admin = False
 
     def get_tool_definition(self):
         return Tool(

@@ -1,15 +1,15 @@
 {
   "name": "@openclaw/windows-mcp",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Windows desktop automation — HTTP MCP bridge",
   "type": "module",
-  "description": "Windows desktop automation tools for OpenClaw",
   "main": "index.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  },
   "openclaw": {
     "extensions": [
       "./index.js"
     ]
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0"
   }
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 MCP CLI Tool for OpenClaw
 Exposes 22 MCP tools as a single callable endpoint
@@ -25,7 +25,7 @@ MCP_SERVERS = [
     {
         "name": "windows",
         "command": [sys.executable, "windows_mcp_server.py"],
-        "tools_count": 21,
+        "tools_count": 27,
         "description": "Windows system tools (snapshot, shell, click, etc.)"
     },
     {
@@ -33,6 +33,12 @@ MCP_SERVERS = [
         "command": [sys.executable, "whatsapp_bridge_mcp.py"],
         "tools_count": 3,
         "description": "WhatsApp bridge tools (log-message, health, send-log)"
+    },
+    {
+        "name": "mem0",
+        "command": [sys.executable, "mem0_mcp_server.py"],
+        "tools_count": 5,
+        "description": "mem0 smart memory layer (search, add, get-all, delete, clear)"
     }
 ]
 
@@ -208,7 +214,7 @@ def cmd_list_tools():
     for server_config in MCP_SERVERS:
         server = get_server(server_config["name"])
         if not server:
-            print(f"⚠️  Could not connect to {server_config['name']}", file=sys.stderr)
+            print(f"âš ï¸  Could not connect to {server_config['name']}", file=sys.stderr)
             continue
         
         tools = server.list_tools()
@@ -331,3 +337,5 @@ if __name__ == "__main__":
             server.stop()
     
     sys.exit(exit_code)
+
+

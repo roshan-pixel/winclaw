@@ -8,7 +8,7 @@ from . import BaseTool
 import sys
 sys.path.append('..')
 from utils.logger import get_logger
-from utils.accessibility import get_window_list, get_active_window, focus_window_by_title
+from utils.accessibility import get_active_window_info
 
 logger = get_logger("window_tool")
 
@@ -49,31 +49,21 @@ class WindowTool(BaseTool):
         
         try:
             if action == "list":
-                windows = get_window_list()
-                result = f"Found {len(windows)} windows:\n"
-                for i, win in enumerate(windows, 1):
-                    result += f"{i}. {win['title']} ({win['width']}x{win['height']})\n"
-                logger.info(f"Listed {len(windows)} windows")
-                return [TextContent(type="text", text=result)]
+                import subprocess
+                command = 'powershell "Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"} | Select-Object Name,MainWindowTitle | Format-Table -AutoSize"'
+                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+                output = result.stdout
+                logger.info(f"Listed windows via PowerShell")
+                return [TextContent(type="text", text=output)]
                 
             elif action == "active":
-                active = get_active_window()
-                result = f"Active: {active['title']}\nPosition: ({active['x']}, {active['y']})\nSize: {active['width']}x{active['height']}"
+                active = get_active_window_info()
+                result = f"Active: {active['title']}\nPosition: ({active['position']['x']}, {active['position']['y']})\nSize: {active['position']['width']}x{active['position']['height']}"
                 logger.info(f"Got active window: {active['title']}")
                 return [TextContent(type="text", text=result)]
                 
             elif action == "focus":
-                title = arguments.get("title")
-                if not title:
-                    return [TextContent(type="text", text="ERROR: 'title' required for focus action")]
-                
-                success = focus_window_by_title(title)
-                if success:
-                    logger.info(f"Focused window: {title}")
-                    return [TextContent(type="text", text=f"Focused window: {title}")]
-                else:
-                    logger.warning(f"Window not found: {title}")
-                    return [TextContent(type="text", text=f"ERROR: Window not found: {title}")]
+                return [TextContent(type="text", text="ERROR: 'focus' action is temporarily disabled due to underlying library changes. Please use 'AppTool's switch mode if available.")]
                     
         except Exception as e:
             logger.error(f"Window operation failed: {e}", exc_info=True)

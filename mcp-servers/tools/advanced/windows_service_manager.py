@@ -214,5 +214,55 @@ class WindowsServiceManager:
         except:
             return False
 
+
+    # ── MCP Tool Interface ────────────────────────────────────────────────────
+    def get_tool_definition(self):
+        from mcp.types import Tool
+        return Tool(
+            name="windows-mcp-windows-service",
+            description="Manage Windows services: list, start, stop, restart, status, enable, disable, create.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["list","start","stop","restart","status","enable","disable","create"],
+                        "description": "Action to perform"
+                    },
+                    "service_name": {"type": "string", "description": "Service name"},
+                    "status": {"type": "string", "description": "Filter by status (list only)"},
+                    "display_name": {"type": "string", "description": "Display name (create only)"},
+                    "binary_path": {"type": "string", "description": "Path to service binary (create only)"},
+                    "description": {"type": "string", "description": "Service description (create only)"}
+                },
+                "required": ["action"]
+            }
+        )
+
+    async def execute(self, arguments: dict):
+        from mcp.types import TextContent
+        import json as _json
+        action = arguments.get("action", "")
+        svc = arguments.get("service_name", "")
+        try:
+            if action == "list":     result = self.list_services(arguments.get("status"))
+            elif action == "start":  result = self.start_service(svc)
+            elif action == "stop":   result = self.stop_service(svc)
+            elif action == "restart":result = self.restart_service(svc)
+            elif action == "status": result = self.get_service_status(svc)
+            elif action == "enable": result = self.enable_service(svc)
+            elif action == "disable":result = self.disable_service(svc)
+            elif action == "create": result = self.create_service(
+                svc,
+                arguments.get("display_name", svc),
+                arguments.get("binary_path", ""),
+                arguments.get("description", "")
+            )
+            else: result = {"error": f"Unknown action: {action}"}
+        except Exception as e:
+            result = {"error": str(e)}
+        return [TextContent(type="text", text=_json.dumps(result, indent=2, default=str))]
+
+
 # Export the tool
 windows_service_manager = WindowsServiceManager()

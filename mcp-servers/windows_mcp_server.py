@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Windows MCP Server - ULTRA CLEAN STDIO + READ TOOL
 Guarantees zero stdout pollution during tool execution
@@ -112,6 +112,7 @@ def with_null_streams(func):
 server = Server("windows-control")
 
 TOOL_PATHS = {
+    # Core Tools (13)
     "windows-mcp-click": "tools.click_tool.ClickTool",
     "windows-mcp-type": "tools.type_tool.TypeTool",
     "windows-mcp-scroll": "tools.scroll_tool.ScrollTool",
@@ -124,6 +125,10 @@ TOOL_PATHS = {
     "windows-mcp-scrape": "tools.scrape_tool.ScrapeTool",
     "windows-mcp-multiselect": "tools.multiselect_tool.MultiSelectTool",
     "windows-mcp-multiedit": "tools.multiedit_tool.MultiEditTool",
+    "windows-mcp-window": "tools.window_tool.WindowTool",
+    
+    # Advanced Tools (9+)
+    "windows-mcp-execute": "tools.execute_tool.ExecuteTool",
     "windows-mcp-vision": "tools.vision_tool.VisionTool",
     "windows-mcp-process-manager": "tools.advanced.process_manager_tool.ProcessManagerTool",
     "windows-mcp-service-manager": "tools.advanced.service_manager_tool.ServiceManagerTool",
@@ -132,7 +137,11 @@ TOOL_PATHS = {
     "windows-mcp-registry": "tools.advanced.registry_tool.RegistryTool",
     "windows-mcp-task-scheduler": "tools.advanced.task_scheduler_tool.TaskSchedulerTool",
     "windows-mcp-system-info": "tools.advanced.system_info_tool.SystemInfoTool",
+    # Google Workspace Tools
+    "google-workspace": "google_workspace_tool.GoogleWorkspaceTool",
     "windows-mcp-clipboard": "tools.advanced.clipboard_tool.ClipboardTool",
+    "windows-mcp-file-system": "tools.advanced.file_system_tool.FileSystemTool",
+    "windows-mcp-windows-service": "tools.advanced.windows_service_manager.WindowsServiceManager",
 }
 
 HANDLERS: Dict[str, Any] = {}
@@ -173,13 +182,13 @@ async def list_tools() -> list[Tool]:
     # Add standard READ tool first
     tools.append(Tool(
         name="read",
-        description="Read file or resource content. Provide the full file path.",
+        description="Read file or resource content. You MUST provide the full absolute file path in the `path` parameter (e.g. C:\\Users\\sgarm\\file.txt). Calling without a path returns a directory listing.",
         inputSchema={
             "type": "object",
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Full path to the file or resource to read"
+                    "description": "REQUIRED: Full absolute file path to read (e.g. C:\\Users\\sgarm\\file.txt)"
                 }
             },
             "required": ["path"]
@@ -228,11 +237,29 @@ async def call_tool(name: str, arguments: dict) -> Sequence[TextContent | ImageC
     if name == "read":
         path = arguments.get("path", "")
         if not path:
-            log("READ tool called without path")
-            return [TextContent(
-                type="text", 
-                text="ERROR: 'path' parameter is required for read tool"
-            )]
+            log("READ tool called without path - returning workspace listing")
+            try:
+                workspace = os.environ.get("WORKSPACE", os.path.expanduser("~"))
+                listing = []
+                for root, dirs, files in os.walk(workspace):
+                    depth = root.replace(workspace, "").count(os.sep)
+                    if depth >= 2:
+                        dirs.clear()
+                        continue
+                    indent = "  " * depth
+                    listing.append(f"{indent}{os.path.basename(root)}/")
+                    for f in files[:20]:
+                        listing.append(f"{indent}  {f}")
+                listing_text = "\n".join(listing[:100])
+                return [TextContent(
+                    type="text",
+                    text=f"No path provided. Workspace listing ({workspace}):\n\n{listing_text}\n\nPlease call read again with a specific file path."
+                )]
+            except Exception as e:
+                return [TextContent(
+                    type="text",
+                    text=f"No path provided. Please specify a 'path' parameter with the full file path to read."
+                )]
         
         try:
             log(f"Reading file: {path}")
